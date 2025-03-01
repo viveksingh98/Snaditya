@@ -6,4 +6,5 @@
     <string name="restart_button">Play Again!</string>
     <string name="start_message">Let\'s go Aditya!</string>
     <string name="new_record">Wow Aditya! New Record: %d</string>
+    <string name="toggle_music">Toggle Background Music</string>
 </resources>

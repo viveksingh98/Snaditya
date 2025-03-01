@@ -41,6 +41,17 @@
         android:textColor="@color/white"
         android:textSize="20sp"/>
 
+    <!-- Music Toggle Button -->
+    <ImageButton
+        android:id="@+id/music_toggle_btn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_volume_on"
+        android:contentDescription="@string/toggle_music" />
+
     <!-- Game View for Aditya's Snake -->
     <com.example.snaditya.GameView
         android:id="@+id/game_view"
