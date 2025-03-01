@@ -1,8 +1,7 @@
-// SnakeGame.kt
 package com.example.snaditya
 
 import android.graphics.Point
-import kotlin.random.Random
+import android.util.Log
 
 class SnakeGame {
     companion object {
@@ -15,181 +14,231 @@ class SnakeGame {
         const val FOOD_NORMAL = 0
         const val FOOD_BONUS = 1
         const val FOOD_SPECIAL = 2
+
+        private const val TAG = "SnakeGame"
     }
 
     var direction = DIRECTION_RIGHT
-    var blockSize = 0
-    private var widthInBlocks = 0
-    private var heightInBlocks = 0
-    private var width = 0
-    private var height = 0
+    var blockSize = 25 // Default value to prevent division by zero
+    private var widthInBlocks = 20 // Default reasonable value
+    private var heightInBlocks = 20 // Default reasonable value
+    private var width = 600 // Default reasonable size
+    private var height = 600 // Default reasonable size
 
     val snakeBody = mutableListOf<Point>()
-    var food = Point()
-    var foodType = FOOD_NORMAL
-    var bonusTimer = 0
-    private val random = Random
+    var food = Point(10, 10) // Default food position in middle of default grid
+    private var foodType = FOOD_NORMAL
+    private var bonusTimer = 0
+    private var initialized = false
 
     init {
-        // Initialize snake with 3 segments
-        snakeBody.add(Point(5, 5))
-        snakeBody.add(Point(4, 5))
-        snakeBody.add(Point(3, 5))
-        spawnFood()
+        try {
+            Log.d(TAG, "Initializing SnakeGame with default values")
+            // Initialize snake with 3 segments - use safer starting positions
+            snakeBody.add(Point(10, 10)) // Head
+            snakeBody.add(Point(9, 10))  // Body
+            snakeBody.add(Point(8, 10))  // Tail
+            // Don't spawn food in init
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in SnakeGame initialization: ${e.message}")
+        }
     }
 
     fun setScreenSize(w: Int, h: Int) {
-        width = w
-        height = h
-        blockSize = width / 30
+        try {
+            Log.d(TAG, "Setting screen size: w=$w, h=$h")
 
-        // Calculate grid size
-        widthInBlocks = width / blockSize
-        heightInBlocks = height / blockSize
+            // Validate input dimensions
+            if (w <= 0 || h <= 0) {
+                Log.w(TAG, "Invalid dimensions provided: w=$w, h=$h. Using defaults.")
+                return
+            }
 
-        // If dimensions have changed, respawn food to ensure it's in bounds
-        if (food.x >= widthInBlocks || food.y >= heightInBlocks) {
-            spawnFood()
+            width = w
+            height = h
+
+            // Ensure reasonable block size (not too small or too large)
+            blockSize = (width / 30).coerceIn(15, 50)
+
+            // Calculate grid size
+            widthInBlocks = width / blockSize
+            heightInBlocks = height / blockSize
+
+            // Ensure minimum grid size
+            widthInBlocks = widthInBlocks.coerceAtLeast(10)
+            heightInBlocks = heightInBlocks.coerceAtLeast(10)
+
+            Log.d(TAG, "Grid size: ${widthInBlocks}x${heightInBlocks}, blockSize: $blockSize")
+
+            // Ensure snake is within bounds
+            validateAndFixSnakePosition()
+
+            // Spawn food if not initialized or out of bounds
+            if (!initialized || food.x >= widthInBlocks || food.y >= heightInBlocks) {
+                spawnFood()
+                initialized = true
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in setScreenSize: ${e.message}")
+        }
+    }
+
+    private fun validateAndFixSnakePosition() {
+        // Make sure snake is within bounds
+        for (segment in snakeBody) {
+            if (segment.x >= widthInBlocks) segment.x = widthInBlocks - 1
+            if (segment.y >= heightInBlocks) segment.y = heightInBlocks - 1
+            if (segment.x < 0) segment.x = 0
+            if (segment.y < 0) segment.y = 0
         }
     }
 
     fun moveSnake(): Boolean {
-        val newHead = Point(snakeBody[0])
+        try {
+            if (snakeBody.isEmpty()) {
+                Log.e(TAG, "Snake body is empty! Reinitializing snake.")
+                snakeBody.add(Point(widthInBlocks / 2, heightInBlocks / 2))
+                return true
+            }
 
-        // Move in current direction
-        when(direction) {
-            DIRECTION_UP -> newHead.y--
-            DIRECTION_DOWN -> newHead.y++
-            DIRECTION_LEFT -> newHead.x--
-            DIRECTION_RIGHT -> newHead.x++
-        }
+            val newHead = Point(snakeBody[0])
 
-        // Check for wall collision
-        if (newHead.x < 0 || newHead.x >= widthInBlocks ||
-            newHead.y < 0 || newHead.y >= heightInBlocks) {
-            return false
-        }
+            // Move in current direction
+            when(direction) {
+                DIRECTION_UP -> newHead.y--
+                DIRECTION_DOWN -> newHead.y++
+                DIRECTION_LEFT -> newHead.x--
+                DIRECTION_RIGHT -> newHead.x++
+            }
 
-        // Check for self collision - excluding the last body part
-        // (since it will move away, unless we just ate food)
-        for (i in 0 until snakeBody.size - 1) {
-            if (newHead.x == snakeBody[i].x && newHead.y == snakeBody[i].y) {
+            // Check for wall collision
+            if (newHead.x < 0 || newHead.x >= widthInBlocks ||
+                newHead.y < 0 || newHead.y >= heightInBlocks) {
                 return false
             }
-        }
 
-        // Add new head
-        snakeBody.add(0, newHead)
-
-        // Remove last segment
-        snakeBody.removeLast()
-
-        // Update bonus food timer if active
-        if (bonusTimer > 0) {
-            bonusTimer--
-            if (bonusTimer == 0) {
-                // Bonus food disappeared, spawn regular food
-                spawnFood()
+            // Check for self collision
+            for (i in 0 until snakeBody.size - 1) {
+                if (newHead.x == snakeBody[i].x && newHead.y == snakeBody[i].y) {
+                    return false
+                }
             }
-        }
 
-        return true
+            // Add new head
+            snakeBody.add(0, newHead)
+
+            // Remove last segment - using removeAt instead of removeLast for API compatibility
+            if (snakeBody.size > 1) {
+                snakeBody.removeAt(snakeBody.size - 1)
+            }
+
+            // Update bonus food timer if active
+            if (bonusTimer > 0) {
+                bonusTimer--
+                if (bonusTimer == 0) {
+                    spawnFood()
+                }
+            }
+
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in moveSnake: ${e.message}")
+            return true // Return true to prevent game over on error
+        }
     }
 
     fun growSnake() {
-        // Add a new segment at the current tail position
-        if (snakeBody.isNotEmpty()) {
-            snakeBody.add(Point(snakeBody.last()))
+        try {
+            // Add a new segment at the current tail position
+            if (snakeBody.isNotEmpty()) {
+                snakeBody.add(Point(snakeBody.last()))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in growSnake: ${e.message}")
         }
     }
 
     fun checkFoodCollision(): Boolean {
-        return snakeBody[0].x == food.x && snakeBody[0].y == food.y
+        try {
+            if (snakeBody.isEmpty()) return false
+            return snakeBody[0].x == food.x && snakeBody[0].y == food.y
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in checkFoodCollision: ${e.message}")
+            return false
+        }
     }
 
     fun spawnFood() {
-        // Determine food type - special chance based on current snake length
-        foodType = when {
-            random.nextInt(100) < 5 + (snakeBody.size / 2) -> FOOD_BONUS // Bonus food more likely as snake grows
-            random.nextInt(100) < 3 && snakeBody.size > 10 -> FOOD_SPECIAL // Special food only after snake length > 10
-            else -> FOOD_NORMAL
-        }
-
-        // Set bonus food timer if applicable
-        bonusTimer = if (foodType == FOOD_BONUS) 30 else 0
-
-        // Keep trying to place food until we find an empty space
-        var validPosition = false
-        while (!validPosition) {
-            food.x = random.nextInt(widthInBlocks)
-            food.y = random.nextInt(heightInBlocks)
-
-            // Make sure food is not on the snake's body
-            validPosition = true
-            for (segment in snakeBody) {
-                if (segment.x == food.x && segment.y == food.y) {
-                    validPosition = false
-                    break
-                }
+        try {
+            // Validate dimensions before proceeding
+            if (widthInBlocks <= 1 || heightInBlocks <= 1) {
+                Log.w(TAG, "Grid too small to spawn food: ${widthInBlocks}x${heightInBlocks}")
+                // Set food to a safe position
+                food.x = 5
+                food.y = 5
+                return
             }
 
-            // Try to avoid edges for nicer gameplay
-            if (food.x == 0 || food.x == widthInBlocks - 1 ||
-                food.y == 0 || food.y == heightInBlocks - 1) {
-                if (random.nextInt(100) < 70) { // 70% chance to retry if on edge
-                    validPosition = false
-                }
-            }
-        }
-    }
+            // Determine food type
+            foodType = FOOD_NORMAL
 
-    // Generate obstacles for the special level
-    fun generateObstacles(count: Int): List<Point> {
-        val obstacles = mutableListOf<Point>()
+            bonusTimer = 0
 
-        for (i in 0 until count) {
-            var valid = false
+            // Safe dimensions
+            val safeWidth = widthInBlocks.coerceAtLeast(1)
+            val safeHeight = heightInBlocks.coerceAtLeast(1)
+
+            // Try to place food in valid position
+            var validPosition = false
             var attempts = 0
+            val maxAttempts = 50
 
-            while (!valid && attempts < 20) {
+            while (!validPosition && attempts < maxAttempts) {
                 attempts++
 
-                val x = random.nextInt(2, widthInBlocks - 2)
-                val y = random.nextInt(2, heightInBlocks - 2)
-                val obstacle = Point(x, y)
+                try {
+                    // Use random with safe bounds
+                    food.x = (0 until safeWidth).random()
+                    food.y = (0 until safeHeight).random()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error generating random food position: ${e.message}")
+                    food.x = 5
+                    food.y = 5
+                    break
+                }
 
-                // Check if obstacle overlaps with snake
-                var overlapsSnake = false
+                // Check if food overlaps with snake
+                validPosition = true
                 for (segment in snakeBody) {
-                    if (segment.x == x && segment.y == y) {
-                        overlapsSnake = true
+                    if (segment.x == food.x && segment.y == food.y) {
+                        validPosition = false
                         break
                     }
-                }
-
-                // Check if obstacle overlaps with food
-                val overlapsFood = (food.x == x && food.y == y)
-
-                // Check if obstacle overlaps with other obstacles
-                var overlapsObstacles = false
-                for (existingObstacle in obstacles) {
-                    if (existingObstacle.x == x && existingObstacle.y == y) {
-                        overlapsObstacles = true
-                        break
-                    }
-                }
-
-                if (!overlapsSnake && !overlapsFood && !overlapsObstacles) {
-                    obstacles.add(obstacle)
-                    valid = true
                 }
             }
-        }
 
-        return obstacles
+            // If no valid position found, place food away from snake head
+            if (!validPosition) {
+                if (snakeBody.isNotEmpty()) {
+                    food.x = (snakeBody[0].x + safeWidth / 2) % safeWidth
+                    food.y = (snakeBody[0].y + safeHeight / 2) % safeHeight
+                } else {
+                    // Default position
+                    food.x = safeWidth / 2
+                    food.y = safeHeight / 2
+                }
+            }
+
+            Log.d(TAG, "Food spawned at: ${food.x},${food.y}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in spawnFood: ${e.message}")
+            // Set safe food position on error
+            food.x = 5
+            food.y = 5
+        }
     }
 
-    // Method to get food value based on type
+    @Suppress("unused")
     fun getFoodValue(): Int {
         return when (foodType) {
             FOOD_BONUS -> 3
@@ -198,38 +247,41 @@ class SnakeGame {
         }
     }
 
-    // Add Aditya's special power - teleport once through walls
+    @Suppress("unused")
     fun tryTeleport(): Boolean {
-        val head = snakeBody[0]
-        var teleported = false
+        try {
+            if (snakeBody.isEmpty()) return false
 
-        when {
-            // Left wall teleport to right
-            head.x <= 0 -> {
-                val newHead = Point(widthInBlocks - 2, head.y)
-                snakeBody[0] = newHead
-                teleported = true
+            val head = snakeBody[0]
+            var teleported = false
+
+            when {
+                head.x <= 0 -> {
+                    val newHead = Point(widthInBlocks - 2, head.y)
+                    snakeBody[0] = newHead
+                    teleported = true
+                }
+                head.x >= widthInBlocks - 1 -> {
+                    val newHead = Point(1, head.y)
+                    snakeBody[0] = newHead
+                    teleported = true
+                }
+                head.y <= 0 -> {
+                    val newHead = Point(head.x, heightInBlocks - 2)
+                    snakeBody[0] = newHead
+                    teleported = true
+                }
+                head.y >= heightInBlocks - 1 -> {
+                    val newHead = Point(head.x, 1)
+                    snakeBody[0] = newHead
+                    teleported = true
+                }
             }
-            // Right wall teleport to left
-            head.x >= widthInBlocks - 1 -> {
-                val newHead = Point(1, head.y)
-                snakeBody[0] = newHead
-                teleported = true
-            }
-            // Top wall teleport to bottom
-            head.y <= 0 -> {
-                val newHead = Point(head.x, heightInBlocks - 2)
-                snakeBody[0] = newHead
-                teleported = true
-            }
-            // Bottom wall teleport to top
-            head.y >= heightInBlocks - 1 -> {
-                val newHead = Point(head.x, 1)
-                snakeBody[0] = newHead
-                teleported = true
-            }
+
+            return teleported
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in tryTeleport: ${e.message}")
+            return false
         }
-
-        return teleported
     }
 }
