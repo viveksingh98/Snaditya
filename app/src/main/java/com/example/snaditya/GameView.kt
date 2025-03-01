@@ -332,11 +332,11 @@ class GameView(context: Context, attrs: AttributeSet?) :
 
     override fun onFling(
         e1: MotionEvent?,
-        e2: MotionEvent?,
+        e2: MotionEvent,  // Change from MotionEvent? to MotionEvent (non-nullable)
         velocityX: Float,
         velocityY: Float
     ): Boolean {
-        if (e1 == null || e2 == null) return false
+        if (e1 == null) return false  // Only need to check e1 now
 
         val deltaX = e2.x - e1.x
         val deltaY = e2.y - e1.y
