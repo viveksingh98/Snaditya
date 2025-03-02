@@ -1,4 +1,4 @@
-                                                            **Snaditya - A Personalized Snake Game**
+# Snaditya - A Personalized Snake Game
 
 **Overview**
 ------------
@@ -13,21 +13,21 @@ In this version of Snake, players control a snake that grows longer as it consum
 **Features**
   --------
 
-a) **Personalized Experience:** Custom messages and encouragement designed specifically for Aditya
-b) **Dynamic Difficulty:** Game speed increases as the score grows
-c) **Special Effects:**
-        - Color-changing snake after every 3 points
-        - Special celebratory messages every 5 points
-        - Visual effects for food collection
+a) **Personalized Experience:** Custom messages and encouragement designed specifically for Aditya  
+b) **Dynamic Difficulty:** Game speed increases as the score grows  
+c) **Special Effects:**  
+- Color-changing snake after every 3 points
+- Special celebratory messages every 5 points
+- Visual effects for food collection
+  
+d) **Detailed Visuals:**  
 
-d) **Detailed Visuals:**
-        - Snake with animated eyes that follow the direction of movement
-        - Pulsating food with the letter "A"
-        - Alternating body segment colors
-
-
-e) **Score Tracking:** Saves and displays high scores across game sessions
-f) **Background Music:** Toggleable music and sound effects
+- Snake with animated eyes that follow the direction of movement
+- Pulsating food with the letter "A"
+- Alternating body segment colors
+  
+e) **Score Tracking:** Saves and displays high scores across game sessions  
+f) **Background Music:** Toggleable music and sound effects  
 g) **Responsive Controls:** Intuitive swipe controls for changing snake direction
 
 **Installation**
@@ -35,10 +35,10 @@ g) **Responsive Controls:** Intuitive swipe controls for changing snake directio
   
 1. Download the APK file to your Android device
 2. Enable installation from unknown sources in your device settings
-        - For Android 8.0+: Settings > Apps > Special Access > Install Unknown Apps
-        - For Android 7.0 or lower: Settings > Security > Unknown Sources
-3. Open the APK file and follow the installation prompts
-4. Launch the game from your app drawer
+- For Android 8.0+: Settings > Apps > Special Access > Install Unknown Apps
+- For Android 7.0 or lower: Settings > Security > Unknown Sources
+4. Open the APK file and follow the installation prompts
+5. Launch the game from your app drawer
 
 **How to Play**
   -----------
@@ -66,7 +66,7 @@ This game was developed with love as a special project for Aditya. The personali
 **Contact Information**
   -------------------
   
-**Developer:** Vivek Singh
+**Developer:** Vivek Singh  
 **Email:** viveksingh10041982@gmail.com
 
 _Snaditya - Created with love❤️ for Aditya_
