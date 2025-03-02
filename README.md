@@ -1,4 +1,4 @@
-**Snaditya - A Personalized Snake Game**
+                                                            **Snaditya - A Personalized Snake Game**
 
 **Overview**
 ------------
